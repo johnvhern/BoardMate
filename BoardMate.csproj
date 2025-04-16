@@ -120,6 +120,12 @@
     <Compile Include="Views\RoomsPage.Designer.cs">
       <DependentUpon>RoomsPage.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\RoomTypePage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\RoomTypePage.Designer.cs">
+      <DependentUpon>RoomTypePage.cs</DependentUpon>
+    </Compile>
     <Compile Include="Views\SettingsPage.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -170,6 +176,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Views\RoomsPage.resx">
       <DependentUpon>RoomsPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Views\RoomTypePage.resx">
+      <DependentUpon>RoomTypePage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Views\SettingsPage.resx">
       <DependentUpon>SettingsPage.cs</DependentUpon>

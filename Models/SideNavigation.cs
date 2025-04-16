@@ -14,10 +14,12 @@ namespace BoardMate.Models
     {
         private Views.MainPage mainPage;
         private Button activeButtonn;
+        private bool isCollapsed;
         public SideNavigation(Views.MainPage form)
         {
             InitializeComponent();
             this.mainPage = form;
+            timer1.Start();
             ColorActiveButton(btnDashboard);
         }
 
@@ -42,8 +44,7 @@ namespace BoardMate.Models
 
         private void btnRooms_Click(object sender, EventArgs e)
         {
-            mainPage.OpenForm(new Views.RoomsPage());
-            ColorActiveButton((Button)sender);
+            timer1.Start();
         }
 
         private void btnBoarder_Click(object sender, EventArgs e)
@@ -97,6 +98,43 @@ namespace BoardMate.Models
             {
                 return;
             }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (isCollapsed)
+            {
+                panelBtnRoom.Height += 10;
+                btnRooms.Text = "  Rooms        ⮝";
+                if (panelBtnRoom.Size == panelBtnRoom.MaximumSize)
+                {
+                    timer1.Stop();
+                    isCollapsed = false;
+                }
+            }
+            else
+            {
+                panelBtnRoom.Height -= 10;
+                btnRooms.Text = "  Rooms        ⮟";
+                if (panelBtnRoom.Size == panelBtnRoom.MinimumSize)
+                {
+                    timer1.Stop();
+                    isCollapsed = true;
+                }
+            }
+        }
+
+        private void btnManageRooms_Click(object sender, EventArgs e)
+        {
+            mainPage.OpenForm(new Views.RoomsPage());
+            ColorActiveButton((Button)sender);
+        }
+
+        private void btnRoomType_Click(object sender, EventArgs e)
+        {
+            Views.RoomTypePage roomTypePage = new Views.RoomTypePage();
+            roomTypePage.ShowDialog();
+            ColorActiveButton((Button)sender);
         }
     }
 }

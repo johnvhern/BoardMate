@@ -132,7 +132,6 @@ namespace BoardMate.Models
 
         private void btnRoomType_Click(object sender, EventArgs e)
         {
-            ColorActiveButton((Button)sender);
             Views.RoomTypePage roomTypePage = new Views.RoomTypePage();
             roomTypePage.ShowDialog();
         }

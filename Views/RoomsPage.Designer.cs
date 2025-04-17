@@ -365,6 +365,7 @@
             this.dgvRoom.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvRoom.Size = new System.Drawing.Size(1914, 898);
             this.dgvRoom.TabIndex = 3;
+            this.dgvRoom.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgvRoom_CellFormatting);
             // 
             // RoomsPage
             // 

@@ -810,6 +810,7 @@
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "DashboardPage";
             this.Text = "DashboardPage";
+            this.Load += new System.EventHandler(this.DashboardPage_Load);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel19.ResumeLayout(false);
             this.panel20.ResumeLayout(false);

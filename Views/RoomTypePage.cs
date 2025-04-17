@@ -17,6 +17,7 @@ namespace BoardMate.Views
     {
         private string dbConnection = "Data Source=LLOMI\\SQLEXPRESS;Initial Catalog=BoardMate;Integrated Security=True;";
         int selectedID = -1;
+        int isArchived = 0;
         public RoomTypePage()
         {
             InitializeComponent();
@@ -31,7 +32,7 @@ namespace BoardMate.Views
                     conn.Open();
 
 
-                    string loadRoomType = "SELECT roomtype_id, roomtype FROM tblRoomType WHERE roomtype IS NOT NULL AND roomtype <> '' AND is_archived = 0";
+                    string loadRoomType = "SELECT * FROM tblRoomType WHERE roomtype IS NOT NULL AND roomtype <> '' AND is_archived = 0";
 
                     using (SqlDataAdapter adapter = new SqlDataAdapter(loadRoomType, conn))
                     {
@@ -39,6 +40,7 @@ namespace BoardMate.Views
                         adapter.Fill(dt);
                         dgvRoomType.DataSource = dt;
                         dgvRoomType.Columns["roomtype_id"].Visible = false;
+                        dgvRoomType.Columns["is_archived"].Visible = false;
                         dgvRoomType.ClearSelection();
                     }
                 }
@@ -142,18 +144,22 @@ namespace BoardMate.Views
         {
             try
             {
+                int status = isArchived == 0 ? 1 : 0;
                 using (SqlConnection conn = new SqlConnection(dbConnection))
                 {
                     try
                     {
                         conn.Open();
-                        string archiveRoomType = "UPDATE tblRoomType SET is_archived = 1 WHERE roomtype_id = @roomtype_id";
+                        string archiveRoomType = "UPDATE tblRoomType SET is_archived = @status WHERE roomtype_id = @roomtype_id";
                         using (SqlCommand cmd = new SqlCommand(archiveRoomType, conn))
                         {
+                            cmd.Parameters.AddWithValue("@status", status);
                             cmd.Parameters.AddWithValue("@roomtype_id", selectedID);
                             cmd.ExecuteNonQuery();
                         }
-                        MessageBox.Show("Room type archived successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        string message = status == 1 ? "Room type archived successfully." : "Room type unarchived successfully.";
+                        MessageBox.Show($"{message}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         selectedID = -1;
                         loadRoomType();
                     }
@@ -200,6 +206,9 @@ namespace BoardMate.Views
             {
                 DataGridViewRow row = dgvRoomType.Rows[e.RowIndex];
                 selectedID = Convert.ToInt32(row.Cells["roomtype_id"].Value);
+                isArchived = Convert.ToInt32(row.Cells["is_archived"].Value);
+
+                btnArchive.Text = isArchived == 0 ? "Archive" : "Unarchive";
                 txtRoomType.Text = row.Cells["roomtype"].Value.ToString();
             }
         }
@@ -254,13 +263,14 @@ namespace BoardMate.Views
             {
                 using (SqlConnection conn = new SqlConnection(dbConnection))
                 {
-                    string filterQuery = "SELECT roomtype_id, roomtype FROM tblRoomType WHERE roomtype IS NOT NULL AND roomtype <> '' AND is_archived = 0";
+                    string filterQuery = "SELECT * FROM tblRoomType WHERE roomtype IS NOT NULL AND roomtype <> '' AND is_archived = 0";
                     using (SqlDataAdapter adapter = new SqlDataAdapter(filterQuery, conn))
                     {
                         DataTable dt = new DataTable();
                         adapter.Fill(dt);
                         dgvRoomType.DataSource = dt;
                         dgvRoomType.Columns["roomtype_id"].Visible = false;
+                        dgvRoomType.Columns["is_archived"].Visible = false;
                         dgvRoomType.ClearSelection();
                     }
                 }
@@ -269,13 +279,14 @@ namespace BoardMate.Views
             {
                 using (SqlConnection conn = new SqlConnection(dbConnection))
                 {
-                    string filterQuery = "SELECT roomtype_id, roomtype FROM tblRoomType WHERE roomtype IS NOT NULL AND roomtype <> '' AND is_archived = 1";
+                    string filterQuery = "SELECT * FROM tblRoomType WHERE roomtype IS NOT NULL AND roomtype <> '' AND is_archived = 1";
                     using (SqlDataAdapter adapter = new SqlDataAdapter(filterQuery, conn))
                     {
                         DataTable dt = new DataTable();
                         adapter.Fill(dt);
                         dgvRoomType.DataSource = dt;
                         dgvRoomType.Columns["roomtype_id"].Visible = false;
+                        dgvRoomType.Columns["is_archived"].Visible = false;
                         dgvRoomType.ClearSelection();
                     }
                 }

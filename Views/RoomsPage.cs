@@ -451,6 +451,12 @@ namespace BoardMate.Views
 
         private void btnFilter_Click(object sender, EventArgs e)
         {
+            if (cbRoomFilter.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a filter option.", "No filter selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             string filter = cbRoomFilter.SelectedItem.ToString();
 
             if (filter == "Available")

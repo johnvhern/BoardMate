@@ -283,6 +283,12 @@ namespace BoardMate.Views
 
         private void filterRoomType()
         {
+            if (cbFilter.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a filter option.", "No filter selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             string status = cbFilter.SelectedItem.ToString();
 
             if (status.Equals("Active"))

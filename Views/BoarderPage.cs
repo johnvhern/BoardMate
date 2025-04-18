@@ -157,5 +157,24 @@ namespace BoardMate.Views
                 txtDeposit.Text = price.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("en-PH"));
             }
         }
+
+        private void btnUpload_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Select Picture";
+                dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    picID.Image = Image.FromFile(dialog.FileName);
+                }
+            }
+        }
+
+        private void btnPayment_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

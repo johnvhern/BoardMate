@@ -140,6 +140,23 @@ namespace BoardMate.Views
             }
         }
 
+        private bool IsRoomTypeInUse(int selectedRoomTypeID)
+        {
+            using (SqlConnection conn = new SqlConnection(dbConnection))
+            {
+                conn.Open();
+                string query = "SELECT COUNT(*) FROM tblRooms WHERE room_type = @id AND is_archived = 0";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", selectedRoomTypeID);
+
+                    int count = (int)cmd.ExecuteScalar();
+                    return count > 0;
+                }
+            }
+        }
+
         private void archiveRoomType()
         {
             try
@@ -167,6 +184,7 @@ namespace BoardMate.Views
                     {
                         MessageBox.Show("Error: " + ex.Message);
                     }
+                    btnArchive.Text = "Archive";
                 }
             }
             catch (Exception ex)
@@ -210,6 +228,7 @@ namespace BoardMate.Views
 
                 btnArchive.Text = isArchived == 0 ? "Archive" : "Unarchive";
                 txtRoomType.Text = row.Cells["roomtype"].Value.ToString();
+                btnAdd.Enabled = false;
             }
         }
 
@@ -227,6 +246,7 @@ namespace BoardMate.Views
                 editRoomType(roomtype);
                 txtRoomType.Clear();
                 selectedID = -1;
+                btnAdd.Enabled = true;
             }
             else
             {
@@ -238,6 +258,7 @@ namespace BoardMate.Views
         {
             txtRoomType.Clear();
             selectedID = -1;
+            btnAdd.Enabled = true;
         }
 
         private void btnArchive_Click(object sender, EventArgs e)
@@ -246,12 +267,17 @@ namespace BoardMate.Views
             {
                 MessageBox.Show("Please select a room type.", "No room type selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }else if (IsRoomTypeInUse(selectedID))
+            {
+                MessageBox.Show("Cannot archive this Room Type. It is currently used by active rooms.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
             else
             {
                 archiveRoomType();
                 txtRoomType.Clear();
                 selectedID = -1;
+                btnAdd.Enabled = true;
             }
         }
 

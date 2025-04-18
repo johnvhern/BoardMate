@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -172,8 +173,98 @@ namespace BoardMate.Views
             }
         }
 
+        public static class Validator
+        {
+            public static bool IsNameValid(string name) =>
+                !string.IsNullOrWhiteSpace(name) && Regex.IsMatch(name, @"^[A-Za-z\s\-]+$");
+
+            public static bool IsMiddleInitialValid(string middleInitial) =>
+                string.IsNullOrWhiteSpace(middleInitial) || Regex.IsMatch(middleInitial, @"^[A-Z]{1}$");
+
+            public static bool IsPhoneNumberValid(string phone) =>
+                Regex.IsMatch(phone, @"^\+639\d{9}$");
+
+            public static bool IsComboBoxSelected(ComboBox comboBox) =>
+                comboBox.SelectedIndex >= 0;
+        }
+
+
         private void btnPayment_Click(object sender, EventArgs e)
         {
+            if (!Validator.IsNameValid(txtFirstName.Text))
+            {
+                MessageBox.Show("First name is required and must contain letters only.", "Invalid Entry" ,MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtFirstName.Focus();
+                return;
+            }
+
+            if (!Validator.IsMiddleInitialValid(txtMiddleInitial.Text))
+            {
+                MessageBox.Show("Middle initial must be a single uppercase letter.", "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtMiddleInitial.Focus();
+                return;
+            }
+
+            if (!Validator.IsNameValid(txtLastName.Text))
+            {
+                MessageBox.Show("Last name is required and must contain letters only.", "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtLastName.Focus();
+                return;
+            }
+
+            if (!Validator.IsPhoneNumberValid(txtPhoneNumber.Text))
+            {
+                MessageBox.Show("Phone number must be a valid 11-digit number starting with +639.", "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtPhoneNumber.Focus();
+                return;
+            }
+
+            if (!Validator.IsPhoneNumberValid(txtEmergencyNumber.Text))
+            {
+                MessageBox.Show("Emergency number must be a valid 11-digit number starting with +639.", "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtEmergencyNumber.Focus();
+                return;
+            }
+
+            if (!Validator.IsNameValid(txtMotherName.Text))
+            {
+                MessageBox.Show("Mother's name is required and must contain letters only.", "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtMotherName.Focus();
+                return;
+            }
+
+            if (!Validator.IsNameValid(txtFatherName.Text))
+            {
+                MessageBox.Show("Father's name is required and must contain letters only.", "Invalid Entry", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtFatherName.Focus();
+                return;
+            }
+
+            if (!Validator.IsComboBoxSelected(cbRoomNumber))
+            {
+                MessageBox.Show("Please select a room number.", "No Room Number Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                cbRoomNumber.Focus();
+                return;
+            }
+
+            // Continue your logic here
+            string monthly = txtMonthlyRent.Text.Replace("₱", "").Replace(",", "").Trim();
+            string deposit = txtDeposit.Text.Replace("₱", "").Replace(",", "").Trim();
+            string fname = txtFirstName.Text;
+            string mname = txtMiddleInitial.Text;
+            string lname = txtLastName.Text;
+            string address = txtAddress.Text;
+            string phone = txtPhoneNumber.Text;
+            string emergency = txtEmergencyNumber.Text;
+            string mother = txtMotherName.Text;
+            string father = txtFatherName.Text;
+            string room = cbRoomNumber.Text;
+            DateTime date = dtStartDate.Value;
+            decimal finalMonthly = Convert.ToDecimal(monthly);
+            decimal finalDeposit = Convert.ToDecimal(deposit);
+
+            CreateContractDialog contract = new CreateContractDialog(fname, mname, lname, address, phone, emergency, mother, father, room, date, finalMonthly, finalDeposit);
+            contract.ShowDialog();
 
         }
     }

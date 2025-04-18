@@ -21,6 +21,48 @@ namespace BoardMate.Views
             InitializeComponent();
         }
 
+        private void loadAvailableRooms()
+        {
+            using (SqlConnection conn = new SqlConnection(dbConnection))
+            {
+                conn.Open();
+                string loadAvailableRooms = "SELECT COUNT(*) FROM tblRooms WHERE room_status = 'Available' AND is_archived = 0";
+                using (SqlCommand cmd = new SqlCommand(loadAvailableRooms, conn))
+                {
+                    int availableRoomCount = (int)cmd.ExecuteScalar();
+                    lblAvailable.Text = availableRoomCount.ToString();
+                }
+            }
+        }
+
+        private void loadOccupied()
+        {
+            using (SqlConnection conn = new SqlConnection(dbConnection))
+            {
+                conn.Open();
+                string loadAvailableRooms = "SELECT COUNT(*) FROM tblRooms WHERE room_status = 'Occupied' AND is_archived = 0";
+                using (SqlCommand cmd = new SqlCommand(loadAvailableRooms, conn))
+                {
+                    int availableRoomCount = (int)cmd.ExecuteScalar();
+                    lblOccupied.Text = availableRoomCount.ToString();
+                }
+            }
+        }
+
+        private void loadArchivedRoom()
+        {
+            using (SqlConnection conn = new SqlConnection(dbConnection))
+            {
+                conn.Open();
+                string loadAvailableRooms = "SELECT COUNT(*) FROM tblRooms WHERE is_archived = 1";
+                using (SqlCommand cmd = new SqlCommand(loadAvailableRooms, conn))
+                {
+                    int availableRoomCount = (int)cmd.ExecuteScalar();
+                    lblArchived.Text = availableRoomCount.ToString();
+                }
+            }
+        }
+
         private void loadRooms()
         {
             using (SqlConnection conn = new SqlConnection(dbConnection))
@@ -96,6 +138,9 @@ namespace BoardMate.Views
         private void RoomsPage_Load(object sender, EventArgs e)
         {
             loadRooms();
+            loadAvailableRooms();
+            loadOccupied();
+            loadArchivedRoom();
             loadRoomType();
             txtPrice.Text = "₱0.00";
 
@@ -190,6 +235,9 @@ namespace BoardMate.Views
 
                 }
                 loadRooms();
+                loadAvailableRooms();
+                loadOccupied();
+                loadArchivedRoom();
             }
             catch (Exception ex)
             {
@@ -338,6 +386,9 @@ namespace BoardMate.Views
 
                 }
                 loadRooms();
+                loadAvailableRooms();
+                loadOccupied();
+                loadArchivedRoom();
             }
             catch (Exception ex)
             {
@@ -416,6 +467,9 @@ namespace BoardMate.Views
                     MessageBox.Show($"{message}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 loadRooms();
+                loadAvailableRooms();
+                loadOccupied();
+                loadArchivedRoom();
             }
             catch (Exception ex)
             {

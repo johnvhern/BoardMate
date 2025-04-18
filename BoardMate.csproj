@@ -114,6 +114,7 @@
     <Compile Include="Views\PaymentPage.Designer.cs">
       <DependentUpon>PaymentPage.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\RoomItem.cs" />
     <Compile Include="Views\RoomsPage.cs">
       <SubType>Form</SubType>
     </Compile>

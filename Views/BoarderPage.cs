@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,6 +16,8 @@ namespace BoardMate.Views
     public partial class BoarderPage : Form
     {
         private string dbConnection = "Data Source=LLOMI\\SQLEXPRESS;Initial Catalog=BoardMate;Integrated Security=True;";
+        int roomID;
+        RoomItem roomItem;
         public BoarderPage()
         {
             InitializeComponent();
@@ -29,6 +32,7 @@ namespace BoardMate.Views
             txtPhoneNumber.MaxLength = 13;
             txtEmergencyNumber.MaxLength = 13;
             loadRoomNumbers();
+            loadAllBoarders();
         }
 
         private void loadRoomNumbers()
@@ -45,15 +49,65 @@ namespace BoardMate.Views
                     {
                         while (reader.Read())
                         {
-                            RoomItem room = new RoomItem
+                            roomItem = new RoomItem
                             {
                                 RoomId = (int)reader["room_id"],
                                 RoomNumber = reader["room_number"].ToString(),
                                 RoomPrice = (decimal)reader["room_price"]
                             };
 
-                            cbRoomNumber.Items.Add(room);
+                            cbRoomNumber.Items.Add(roomItem);
                         }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
+        }
+
+        private void loadAllBoarders()
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(dbConnection))
+                {
+                    conn.Open();
+                    string loadBoarders = "SELECT " +
+                        "b.boarder_id," +
+                        "b.room_id," +
+                        "b.first_name," +
+                        "b.middle_initial," +
+                        "b.last_name," +
+                        "b.boarder_address," +
+                        "b.contact_number," +
+                        "b.emergency_contact," +
+                        "b.mother_name," +
+                        "b.father_name," +
+                        "b.is_archived, " +
+                        "r.room_number FROM tblBoarders b " +
+                        "INNER JOIN tblRooms r ON b.room_id = r.room_id WHERE r.is_archived = 0";
+
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(loadBoarders, conn))
+                    {
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+                        // Assuming you have a DataGridView named dataGridView1
+                        dgvBoarders.DataSource = dt;
+                        // Optionally, you can set the column headers
+                        dgvBoarders.Columns["boarder_id"].Visible = false;
+                        dgvBoarders.Columns["room_id"].Visible = false;
+                        dgvBoarders.Columns["is_archived"].Visible = false;
+                        dgvBoarders.Columns["room_number"].HeaderText = "Room Number";
+                        dgvBoarders.Columns["first_name"].HeaderText = "First Name";
+                        dgvBoarders.Columns["middle_initial"].HeaderText = "Middle Initial";
+                        dgvBoarders.Columns["last_name"].HeaderText = "Last Name";
+                        dgvBoarders.Columns["boarder_address"].HeaderText = "Address";
+                        dgvBoarders.Columns["contact_number"].HeaderText = "Contact Number";
+                        dgvBoarders.Columns["emergency_contact"].HeaderText = "Emergency Contact";
+                        dgvBoarders.Columns["mother_name"].HeaderText = "Mother's Name";
+                        dgvBoarders.Columns["father_name"].HeaderText = "Father's Name";
                     }
                 }
             }
@@ -188,7 +242,6 @@ namespace BoardMate.Views
                 comboBox.SelectedIndex >= 0;
         }
 
-
         private void btnPayment_Click(object sender, EventArgs e)
         {
             if (!Validator.IsNameValid(txtFirstName.Text))
@@ -247,6 +300,7 @@ namespace BoardMate.Views
                 return;
             }
 
+
             // Continue your logic here
             string monthly = txtMonthlyRent.Text.Replace("₱", "").Replace(",", "").Trim();
             string deposit = txtDeposit.Text.Replace("₱", "").Replace(",", "").Trim();
@@ -262,10 +316,47 @@ namespace BoardMate.Views
             DateTime date = dtStartDate.Value;
             decimal finalMonthly = Convert.ToDecimal(monthly);
             decimal finalDeposit = Convert.ToDecimal(deposit);
+            byte[] pic = null;
 
-            CreateContractDialog contract = new CreateContractDialog(fname, mname, lname, address, phone, emergency, mother, father, room, date, finalMonthly, finalDeposit);
-            contract.ShowDialog();
+            using (SqlConnection conn = new SqlConnection(dbConnection))
+            {
+                conn.Open();
+                string getRoomID = "SELECT room_id FROM tblRooms WHERE room_number = @room_number";
 
+                SqlCommand cmd = new SqlCommand(getRoomID, conn);
+                cmd.Parameters.AddWithValue("@room_number", room);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    roomID = Convert.ToInt32(reader["room_id"]);
+                }
+            }
+
+            if (picID.Image != null)
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    picID.Image.Save(ms, picID.Image.RawFormat);
+                    pic = ms.ToArray();
+                }
+            }
+            else
+            {
+                pic = null;
+            }
+
+                CreateContractDialog contract = new CreateContractDialog(pic, fname, mname, lname, address, phone, emergency, mother, father, room, roomID, date, finalMonthly, finalDeposit);
+
+            if (contract.ShowDialog() == DialogResult.OK)
+            {
+                loadAllBoarders();
+            }
+            else
+            {
+               
+            }
         }
     }
 }

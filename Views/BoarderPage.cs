@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace BoardMate.Views
 {
@@ -17,6 +18,7 @@ namespace BoardMate.Views
     {
         private string dbConnection = "Data Source=LLOMI\\SQLEXPRESS;Initial Catalog=BoardMate;Integrated Security=True;";
         int roomID;
+        int selectedBoarderID;
         RoomItem roomItem;
         public BoarderPage()
         {
@@ -338,7 +340,11 @@ namespace BoardMate.Views
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    picID.Image.Save(ms, picID.Image.RawFormat);
+                    using (Bitmap bmp = new Bitmap(picID.Image))
+                    {
+                        bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    }
+
                     pic = ms.ToArray();
                 }
             }
@@ -347,16 +353,171 @@ namespace BoardMate.Views
                 pic = null;
             }
 
-                CreateContractDialog contract = new CreateContractDialog(pic, fname, mname, lname, address, phone, emergency, mother, father, room, roomID, date, finalMonthly, finalDeposit);
+
+            CreateContractDialog contract = new CreateContractDialog(pic, fname, mname, lname, address, phone, emergency, mother, father, room, roomID, date, finalMonthly, finalDeposit);
 
             if (contract.ShowDialog() == DialogResult.OK)
             {
                 loadAllBoarders();
+                txtFirstName.Clear();
+                txtMiddleInitial.Clear();
+                txtLastName.Clear();
+                txtAddress.Clear();
+                txtPhoneNumber.Clear();
+                txtEmergencyNumber.Clear();
+                txtMotherName.Clear();
+                txtFatherName.Clear();
+                cbRoomNumber.SelectedIndex = -1;
+                picID.Image = null;
+                txtMonthlyRent.Clear();
+                txtDeposit.Clear();
+                dgvBoarders.ClearSelection();
+
             }
             else
             {
                
             }
+        }
+
+        private Image ByteArrayToImage(byte[] bytes)
+        {
+            using (MemoryStream ms = new MemoryStream(bytes))
+            {
+                return Image.FromStream(ms);
+            }
+        }
+
+        private byte[] GetImageFromDatabase(int id)
+        {
+            byte[] imageByte = null;
+            string query = "SELECT boarder_picture FROM tblBoarders WHERE boarder_id = @id";
+
+            using (SqlConnection conn = new SqlConnection(dbConnection))
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                object result = cmd.ExecuteScalar();
+
+                if (result != DBNull.Value && result != null)
+                {
+                    imageByte = (byte[])result;
+                }
+            }
+
+            return imageByte;
+        }
+
+
+        private void dgvBoarders_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                if (e.RowIndex >= 0)
+                {
+                    DataGridViewRow row = dgvBoarders.Rows[e.RowIndex];
+                    selectedBoarderID = Convert.ToInt32(row.Cells["boarder_id"].Value);
+                    string firstName = row.Cells["first_name"].Value.ToString();
+                    string middleInitial = row.Cells["middle_initial"].Value.ToString();
+                    string lastName = row.Cells["last_name"].Value.ToString();
+                    string address = row.Cells["boarder_address"].Value.ToString();
+                    string phoneNumber = row.Cells["contact_number"].Value.ToString();
+                    string emergencyContact = row.Cells["emergency_contact"].Value.ToString();
+                    string motherName = row.Cells["mother_name"].Value.ToString();
+                    string fatherName = row.Cells["father_name"].Value.ToString();
+                    txtFirstName.Text = firstName;
+                    txtMiddleInitial.Text = middleInitial;
+                    txtLastName.Text = lastName;
+                    txtAddress.Text = address;
+                    txtPhoneNumber.Text = phoneNumber;
+                    txtEmergencyNumber.Text = emergencyContact;
+                    txtMotherName.Text = motherName;
+                    txtFatherName.Text = fatherName;
+                    picID.Image = ByteArrayToImage(GetImageFromDatabase(selectedBoarderID));
+
+
+                }
+            }
+            catch (Exception ex){
+
+                MessageBox.Show("Error: " + ex.Message);
+            }
+        }
+
+        private void btnUpdate_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (selectedBoarderID >= 0)
+                {
+                    string fname = txtFirstName.Text;
+                    string mname = txtMiddleInitial.Text;
+                    string lname = txtLastName.Text;
+                    string address = txtAddress.Text;
+                    string phone = txtPhoneNumber.Text;
+                    string emergency = txtEmergencyNumber.Text;
+                    string mother = txtMotherName.Text;
+                    string father = txtFatherName.Text;
+                    byte[] picData = GetImageFromDatabase(selectedBoarderID);
+                    using (SqlConnection conn = new SqlConnection(dbConnection))
+                    {
+                        conn.Open();
+                        string updateBoarder = "UPDATE tblBoarders SET first_name = @firstname, middle_initial = @middleinitial, last_name = @lastname, boarder_address = @boarderaddress, contact_number = @contactnumber, emergency_contact = @emergencynumber, mother_name = @mothername, father_name = @fathername WHERE boarder_id = @id";
+                        using (SqlCommand cmd = new SqlCommand(updateBoarder, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@firstname", fname);
+                            cmd.Parameters.AddWithValue("@middleinitial", mname);
+                            cmd.Parameters.AddWithValue("@lastname", lname);
+                            cmd.Parameters.AddWithValue("@boarderaddress", address);
+                            cmd.Parameters.AddWithValue("@contactnumber", phone);
+                            cmd.Parameters.AddWithValue("@emergencynumber", emergency);
+                            cmd.Parameters.AddWithValue("@mothername", mother);
+                            cmd.Parameters.AddWithValue("@fathername", father);
+                            cmd.Parameters.AddWithValue("@id", selectedBoarderID);
+                            cmd.Parameters.Add("@boarderpicture", SqlDbType.VarBinary).Value = picData;
+
+
+                            int rowsAffected = cmd.ExecuteNonQuery();
+                            if (rowsAffected > 0)
+                            {
+                                MessageBox.Show("Boarder updated successfully.");
+                                loadAllBoarders();
+                                btnClear_Click(sender, e);
+                            }
+                            else
+                            {
+                                MessageBox.Show("Failed to update boarder.");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No boarder selected for update.");
+                }
+                }catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            txtFirstName.Clear();
+            txtMiddleInitial.Clear();
+            txtLastName.Clear();
+            txtAddress.Clear();
+            txtPhoneNumber.Clear();
+            txtEmergencyNumber.Clear();
+            txtMotherName.Clear();
+            txtFatherName.Clear();
+            cbRoomNumber.SelectedIndex = -1;
+            picID.Image = null;
+            txtMonthlyRent.Clear();
+            txtDeposit.Clear();
+            dgvBoarders.ClearSelection();
         }
     }
 }
